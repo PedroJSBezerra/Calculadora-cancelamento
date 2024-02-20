@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cancelamento</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .title {
+        text-align: center;
+      }
+
+      .formulario {
+        width: 100%;
+        max-width: 1200px; /* Defina o máximo de largura para o formulário */
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(300px, 1fr)
+        ); /* Três colunas responsivas */
+        grid-gap: 20px;
+      }
+
+      .dados_calculo,
+      .dados_cliente {
+        width: 100%;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      input {
+        width: calc(100% - 20px);
+        padding: 5px;
+        margin-top: 5px;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px;
+        cursor: pointer;
+      }
+
+      #resultado {
+        margin-top: 20px;
+        white-space: pre-line;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="title">Cálculo de Cancelamento</h1>
+    <div class="formulario">
+      <div class="dados_calculo">
+        <h3>Dados do Cálculo</h3>
+        <label for="valorPacote">Valor do Pacote:</label>
+        <input type="text" id="valorPacote" />
+
+        <label for="parcelasVendidas">Parcelas Vendidas:</label>
+        <input type="text" id="parcelasVendidas" />
+
+        <label for="parcelasPagas">Parcelas Pagas:</label>
+        <input type="text" id="parcelasPagas" />
+
+        <label for="sessoesVendidas">Sessões Vendidas:</label>
+        <input type="text" id="sessoesVendidas" />
+
+        <label for="sessoesRealizadas">Sessões Realizadas:</label>
+        <input type="text" id="sessoesRealizadas" />
+
+        <label for="contratoAssinado">Contrato Assinado (Sim/Não):</label>
+        <input type="text" id="contratoAssinado" />
+      </div>
+      <div class="dados_cliente">
+        <h3>Dados do Cliente</h3>
+        <label for="nomeCliente">Nome do Cliente:</label>
+        <input type="text" id="nomeCliente" />
+
+        <label for="cpf">CPF:</label>
+        <input type="text" id="cpf" />
+
+        <label for="unidade">Unidade:</label>
+        <input type="text" id="unidade" />
+
+        <label for="nomeVendedora">Vendedor:</label>
+        <input type="text" id="nomeVendedora" />
+
+        <label for="dataVenda">Data da Venda:</label>
+        <input type="text" id="dataVenda" />
+
+        <label for="dataCancelamento">Data do Cancelamento:</label>
+        <input type="text" id="dataCancelamento" />
+
+        <label for="formaPagamento">Forma de Pagamento:</label>
+        <input type="text" id="formaPagamento" />
+
+        <label for="motivo">Motivo:</label>
+        <input type="text" id="motivo" />
+      </div>
+    </div>
+    <button class="calcular" onclick="calcularCancelamento()">Calcular</button>
+    <div id="resultado"></div>
+
+    <script>
+      function calcularCancelamento() {
+        try {
+          const obterValor = (id) => document.getElementById(id).value;
+          const vPacote = parseFloat(
+            obterValor('valorPacote').replace(',', '.') || 0
+          );
+          const qParcelas = parseInt(obterValor('parcelasVendidas') || 0);
+          const qPago = parseInt(obterValor('parcelasPagas') || 0);
+          const qVendido = parseInt(obterValor('sessoesVendidas') || 0);
+          const qRealizado = parseInt(obterValor('sessoesRealizadas') || 0);
+          const contratoAssinado =
+            obterValor('contratoAssinado').toLowerCase() || 'nao';
+          const nomeCliente = obterValor('nomeCliente');
+          const cpf = obterValor('cpf');
+          const unidade = obterValor('unidade');
+          const nomeVendedora = obterValor('nomeVendedora');
+          const dataVenda = obterValor('dataVenda');
+          const dataCancelamento = obterValor('dataCancelamento');
+          const formaPagamento = obterValor('formaPagamento');
+          const motivo = obterValor('motivo');
+
+          function formatarNumero(numero) {
+            return numero.toFixed(2).replace('.', ',');
+          }
+
+          const { valorPago, valorSessoesRealizadas, valorMulta, resultado } =
+            calcularResultados(
+              vPacote,
+              qParcelas,
+              qPago,
+              qVendido,
+              qRealizado,
+              contratoAssinado
+            );
+
+          const resultadoText = `
+${nomeCliente} ${cpf}
+----------------------------------------------------------
+BELLE    ${nomeCliente}    ${cpf}    ${unidade}    ${nomeVendedora}    ${dataVenda}    ${dataCancelamento}    ${formaPagamento}    R$${vPacote}    R$${formatarNumero(
+            valorPago
+          )}    R$${formatarNumero(
+            valorSessoesRealizadas
+          )}    R$${formatarNumero(valorMulta)}    R$${formatarNumero(
+            resultado
+          )}    ${motivo.toUpperCase()}
+----------------------------------------------------------
+Cancelamento ${unidade}
+${nomeCliente} ${cpf}
+
+- Valor do pacote: R$${vPacote} / ${qParcelas} * ${qPago} = R$${formatarNumero(
+            valorPago
+          )} pago no ${formaPagamento}
+- Realizado em sessões: R$${vPacote} / ${qVendido} * ${qRealizado} = R$${formatarNumero(
+            valorSessoesRealizadas
+          )}
+- Valor da multa: R$${vPacote} - R$${valorSessoesRealizadas} * 30% = R$${formatarNumero(
+            valorMulta
+          )}
+- Total: R$${formatarNumero(valorPago)} - R$${formatarNumero(
+            valorSessoesRealizadas
+          )} - R$${formatarNumero(valorMulta)} = R$${formatarNumero(resultado)}
+
+${
+  resultado >= 0 ? `*Devolução R$${formatarNumero(resultado)}*\n*PIX: ???*` : ''
+}
+----------------------------------------------------------
+Prezado(a) Sr(a). ${nomeCliente},
+
+Em atenção à sua solicitação de cancelamento de contrato registrada em ${dataCancelamento}, a equipe da Ame Laser vem informar que o processo foi concluído${
+            contratoAssinado === 'sim'
+              ? ', seguindo os termos estabelecidos na Cláusula 10 do contrato correspondente'
+              : ''
+          }. Detalhamos abaixo os valores pertinentes:
+
+- Valor do pacote: R$${vPacote} / ${qParcelas} * ${qPago} = R$${formatarNumero(
+            valorPago
+          )} pago no ${formaPagamento}
+- Realizado em sessões: R$${vPacote} / ${qVendido} * ${qRealizado} = R$${formatarNumero(
+            valorSessoesRealizadas
+          )}
+- Valor da multa: R$${vPacote} - R$${valorSessoesRealizadas} * 30% = R$${formatarNumero(
+            valorMulta
+          )}
+- Total: R$${formatarNumero(valorPago)} - R$${formatarNumero(
+            valorSessoesRealizadas
+          )} - R$${formatarNumero(valorMulta)} = R$${formatarNumero(resultado)}
+
+${
+  resultado > 0
+    ? `Ressaltamos que o montante total de R$${formatarNumero(
+        resultado
+      )} já foi restituído à sua conta, por meio de uma transferência PIX para a conta bancária fornecida durante o procedimento de cancelamento. Agradecemos pela compreensão e permanecemos à disposição para quaisquer esclarecimentos adicionais.`
+    : `Gostaríamos de informar que há um saldo devedor pendente no valor de R$${formatarNumero(
+        resultado
+      )} em favor da Ame Laser em seu nome.\n\nPara evitar a negativação do seu nome, solicitamos a gentileza de liquidar o referido saldo no prazo máximo de 30 dias. Para facilitar o processo, pedimos que efetue a transferência via PIX para o CNPJ da empresa: ???.\n\nFavor confirmar o pagamento respondendo a este e-mail anexando o comprovante de ressarcimento. Agradecemos antecipadamente pela sua colaboração e permanecemos à disposição para eventuais esclarecimentos.`
+}
+----------------------------------------------------------
+`;
+
+          document.getElementById('resultado').innerText = resultadoText;
+        } catch (error) {
+          alert(
+            'Erro ao calcular o cancelamento. Verifique os valores inseridos.'
+          );
+          console.error(error);
+        }
+      }
+
+      function calcularResultados(
+        vPacote,
+        qParcelas,
+        qPago,
+        qVendido,
+        qRealizado,
+        contratoAssinado
+      ) {
+        const percMulta = 30 / 100;
+
+        const valorPago = (vPacote / qParcelas) * qPago || 0;
+        const valorSessoesRealizadas = (vPacote / qVendido) * qRealizado || 0;
+        const valorMulta =
+          (vPacote - valorSessoesRealizadas) *
+            percMulta *
+            (contratoAssinado === 'sim' ? 1 : 0) || 0;
+        const resultado = valorPago - valorSessoesRealizadas - valorMulta || 0;
+
+        return { valorPago, valorSessoesRealizadas, valorMulta, resultado };
+      }
+    </script>
+  </body>
+</html>
